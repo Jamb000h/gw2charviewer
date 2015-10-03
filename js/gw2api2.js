@@ -1,5 +1,7 @@
 var testingApiKey = "EE41ABDB-CFCA-DD4C-ACFE-607F4EDCA927A2990A62-4236-491C-8547-74FD120FD239";
 
+var apiKey = "";
+
 function Account() {
   this.name = "";
 }
@@ -35,7 +37,7 @@ function getAccount() {
   return $.ajax( {
     dataType: "json",
     url: "https://api.guildwars2.com/v2/account",
-    data: {access_token: testingApiKey}
+    data: {access_token: apiKey}
   });
 }
 
@@ -43,7 +45,7 @@ function getCharacters() { // Not used atm
   return $.ajax( {
     dataType: "json",
     url: "https://api.guildwars2.com/v2/characters",
-    data: {access_token: testingApiKey}
+    data: {access_token: apiKey}
   });
 }
 
@@ -51,7 +53,7 @@ function getCharacter() { // Add char name
   return $.ajax( {
     dataType: "json",
     url: "https://api.guildwars2.com/v2/characters/Ronano",
-    data: {access_token: testingApiKey}
+    data: {access_token: apiKey}
   });
 }
 
@@ -59,7 +61,7 @@ function getItem(id) {
   return $.ajax( {
     dataType: "json",
     url: "https://api.guildwars2.com/v2/items/" + id,
-    data: {access_token: testingApiKey}
+    data: {access_token: apiKey}
   });
 }
 
@@ -68,26 +70,28 @@ function getItem(id) {
   console.log(account.name);
 });*/
 
-$.when(getCharacter()).then( function(json) {
-  character.name = json.name;
-  character.race = json.race;
-  character.profession = json.profession;
-  character.level = json.level;
-  $.each(json.equipment, function() {
-    character.equipment.push(this);
-  })
-  $.each(json.specializations, function() {
-    character.specializations.push(this);
-  })
-  console.log(character);
-}).then( function() {
-  getItems();
-  //getSpecializations();
-}).then( function() {
-  setTimeout( function() { // For some reason a small delay is required...
-    showItems();
-  }, 100);
-});
+function run() {
+  $.when(getCharacter()).then( function(json) {
+    character.name = json.name;
+    character.race = json.race;
+    character.profession = json.profession;
+    character.level = json.level;
+    $.each(json.equipment, function() {
+      character.equipment.push(this);
+    })
+    $.each(json.specializations, function() {
+      character.specializations.push(this);
+    })
+    console.log(character);
+  }).then( function() {
+    getItems();
+    //getSpecializations();
+  }).then( function() {
+    setTimeout( function() { // For some reason a small delay is required...
+      showItems();
+    }, 100);
+  });
+}
 
 function getItems() {
   var def = $.Deferred();
@@ -156,3 +160,8 @@ function showInfo(id) {
     $("#infoUpgrades").html("");
   }
 }
+
+$("body").on("click", "#startButton", function() {
+  apiKey = $("#apiKey").val();
+  run();
+})
