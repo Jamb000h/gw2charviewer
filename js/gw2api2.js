@@ -2,6 +2,8 @@ var testingApiKey = "EE41ABDB-CFCA-DD4C-ACFE-607F4EDCA927A2990A62-4236-491C-8547
 
 var apiKey = "";
 
+var characterName = "";
+
 function Account() {
   this.name = "";
 }
@@ -52,7 +54,7 @@ function getCharacters() { // Not used atm
 function getCharacter() { // Add char name
   return $.ajax( {
     dataType: "json",
-    url: "https://api.guildwars2.com/v2/characters/Ronano",
+    url: "https://api.guildwars2.com/v2/characters/" + characterName,
     data: {access_token: apiKey}
   });
 }
@@ -161,7 +163,18 @@ function showInfo(id) {
   }
 }
 
+/*
 $("body").on("click", "#startButton", function() {
   apiKey = $("#apiKey").val();
-  run();
+  $.when(getCharacters()).then(function(json) {
+    $.each(json, function() {
+      $("#characters").append("<a class=\"character\">" + this + "</a>");
+    })
+  })
 })
+
+$("body").on("click", ".character", function() {
+  $(".item").remove();
+  characterName = $(this).html();
+  run();
+})*/
