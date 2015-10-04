@@ -133,8 +133,8 @@ $.when(charactersDeferred).done(function() { // Get and save data for the equipm
       itemList.push(arguments[i][0]);
       console.log("Data for item " + arguments[i][0].name + " fetched!");
     }
+    itemsDeferred.resolve();
   })
-  itemsDeferred.resolve();
 })
 
 $.when(charactersDeferred).done(function() { // Get and save data for all specializations found
@@ -161,8 +161,8 @@ $.when(charactersDeferred).done(function() { // Get and save data for all specia
       specializationList.push(arguments[i][0]);
       console.log("Data for specialization " + arguments[i][0].name + " fetched!");
     }
+    specializationsDeferred.resolve();
   })
-  specializationsDeferred.resolve();
 })
 
 $.when(charactersDeferred).done(function() { // Get and save data for all traits found
@@ -193,6 +193,11 @@ $.when(charactersDeferred).done(function() { // Get and save data for all traits
       traitList.push(arguments[i][0]);
       console.log("Data for trait " + arguments[i][0].name + " fetched!");
     }
+    traitsDeferred.resolve();
   })
-  traitsDeferred.resolve();
+})
+
+$.when(specializationsDeferred, traitsDeferred, charactersDeferred, itemsDeferred).then(function() {
+  console.log("SHOW CHARACTERS!");
+  printCharacters();
 })
