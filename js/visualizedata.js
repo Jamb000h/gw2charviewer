@@ -1,4 +1,5 @@
 var target = $("#wrapper");
+var itemInfo = $("#itemInfo");
 
 var character;
 
@@ -31,10 +32,29 @@ function printItems(id) {
   })
 }
 
+function showItemInfo(index) {
+  itemInfo.empty();
+  var item = itemList[index];
+  itemInfo.append("<p>" + item.name + "</p>");
+  itemInfo.append("<p>" + item.type + "</p>");
+  itemInfo.append("<p>" + item.rarity + "</p>");
+  itemInfo.append("<p>" + item.level + "</p>");
+  if(item.details.type) {
+    itemInfo.append("<p>" + item.details.type + "</p>");
+  }
+  if(item.type == "Weapon") {
+    itemInfo.append("<p>" + item.details.min_power + " - " + item.details.max_power + "</p>");
+  }
+}
+
 // Event handlers
 
 $(target).on("click", ".character", function() {
   target.empty();
   var id = $(this).data("id");
   printCharacter(id);
-})
+});
+
+$(target).on("mouseover", ".item", function() {
+  showItemInfo($(this).data("index"));
+});
