@@ -19,6 +19,8 @@ var character;
 
 var itemList = []; // List of items fetched based on chosen character
 
+var itemIcons = []; // List for image objects based on fetched items - used for preloading item images
+
 var specializationList = []; // List of specializations fetched based on on chosen character
 
 var traitList = []; // List of traits fetched based on user character on chosen character's specializations
@@ -37,8 +39,7 @@ var traitsDeferred = $.Deferred();
 function getAccountData() {
   $.when(getAccount())
     .done( function(accountData) { // Save account data
-      // $.ajax returns data as follows: [data, statusText, jqXHR]
-      account = accountData[0];
+      account = accountData;
       console.log("Account info fetched for account " + account.name + "!");
       accountDeferred.resolve(); // Character names fetched
     })
@@ -51,8 +52,7 @@ function getAccountData() {
 function getCharactersData() {
   $.when(getCharacters())
     .done( function(charactersData) {
-      // $.ajax returns data as follows: [data, statusText, jqXHR]
-      account.characters = charactersData[0];
+      account.characters = charactersData;
       console.log("Character names fetched!");
       characterNamesDeferred.resolve(); // Character names fetched
     })
@@ -63,10 +63,10 @@ function getCharactersData() {
 }
 
 function getBuildData() {
-  $.when(getBuildNumber())
+  $.when(getBuild())
     .done( function(buildData) {
       // $.ajax returns data as follows: [data, statusText, jqXHR]
-      buildNumber = buildNumberData[0].id;
+      buildNumber = buildData.id;
       console.log("Build number fetched! Current build number is " + buildNumber);
       buildDeferred.resolve();
     })
@@ -77,9 +77,9 @@ function getBuildData() {
 }
 
 function getCharacterData(characterName) {
-  $.when(characterNamesDeferred)
-    .done(function() { // Get and save data for the chosen character
-      character = getCharacter(characterName));
+  $.when(getCharacter(characterName))
+    .done( function(characterData) { // Get and save data for the chosen character
+      character = characterData;
       console.log("Data for character " + character.name + " fetched!");
       console.log(character);
       characterDeferred.resolve();
@@ -119,6 +119,17 @@ function getCharacterEquipment() {
       for(var i = 0; i < arguments.length; i++) { // The function gets all promises as an array, iterate via arguments
         // $.ajax returns data as follows: [data, statusText, jqXHR]
         itemList.push(arguments[i][0]);
+        // Preload item icons
+        var icon = new Image();
+        icon.src = arguments[i][0].icon;
+        icon.alt = arguments[i][0].name;
+        if(arguments[i][0].type == "UpgradeComponent") {
+          $(icon).addClass("upgrade");
+        } else {
+          $(icon).addClass("item");
+        }
+        itemIcons.push(icon);
+
         console.log("Data for item " + arguments[i][0].name + " fetched!");
       }
       itemsDeferred.resolve();
@@ -164,7 +175,7 @@ function getcharacterSpecializations() {
 }
 
 function getCharacterTraits() {
-  $.when(charactersDeferred)
+  $.when(characterDeferred)
     .done(function() { // Get and save data for all traits found
       console.log("Getting trait data!");
       var fetchedTraits = []; // List for preventing duplicates when fetching trait data from API
@@ -200,12 +211,109 @@ function getCharacterTraits() {
   })
 }
 
+function fetchAccountAndCharacters() {
+  getAccountData();
+  $.when(accountDeferred).done( function() {
+    getCharactersData();
+  })
+  $.when(characterNamesDeferred).done( function() {
+    printCharacters();
+  })
+}
 
-// HERE SHOW DATA AS SOON AS IT IS AVAILABLE!
-/*
-$.when(specializationsDeferred, traitsDeferred, charactersDeferred, itemsDeferred).then(function() {
-  console.log("SHOW CHARACTERS!");
-  $("#loading").hide();
-  printCharacters();
-})
-*/
+function fetchCharacterData(characterName) {
+  getCharacterData(characterName);
+  $.when(characterDeferred).done( function() {
+    printCharacter();
+    getCharacterEquipment();
+    getcharacterSpecializations();
+    getCharacterTraits();
+  })
+  $.when(itemsDeferred).done( function() {
+    printItems();
+  })
+  $.when(specializationsDeferred).done( function() {
+      // printSpecializations();
+  })
+  $.when(traitsDeferred).done( function() {
+      // printTraits();
+  })
+}
+
+function printCharacters() {
+  console.log("SHOW ALL CHARACTERS!");
+  var target = $("#characterList");
+  $.each(account.characters, function(index) { // Print characters
+    target.append("<a class=\"character\" data-id=\"" + index + "\">" + this + "</a><br />");
+  })
+}
+
+function printCharacter() {
+  console.log("SHOW SINGLE CHARACTER!");
+  var target = $("#characterInfo");
+  target.append("<p>" + character.name + "</p>");
+  target.append("<p>" + character.level + "</p>");
+  target.append("<p>" + character.race + "</p>");
+  target.append("<p>" + character.profession + "</p>");
+  // ADD MORE INFORMATION
+}
+
+function printItems() {
+  console.log("SHOW ITEMS!");
+  var target = $("#itemList");
+  $.each(character.equipment, function(index, value) {
+    var target = $("#" + this.slot);
+    var item;
+    var itemIndex;
+    for(var i = 0; i < itemList.length; i++) {
+      if(itemList[i].id === this.id) {
+        itemIndex = i;
+        item = itemList[i];
+      }
+    }
+    var itemIcon = itemIcons[itemIndex];
+    $(itemIcon).data("index", itemIndex);
+    $(itemIcon).data("character-item", index);
+    target.append(itemIcons[itemIndex]);
+  })
+}
+
+function showItemInfo(itemIndex, characterItemIndex) {
+  var itemInfo = $("#itemInfo");
+  itemInfo.empty();
+  var item = itemList[itemIndex];
+  var characterItem = character.equipment[characterItemIndex];
+  var upgrade;
+  itemInfo.append("<img src=\"" + item.icon + "\" />");
+  itemInfo.append("<p class=\"" + item.rarity + "\">" + item.name + "</p>");
+  if(item.details.defense) {
+    itemInfo.append("<p>Defense: " + item.details.defense + "</p>");
+  }
+  if(item.details.infix_upgrade) {
+    $.each(item.details.infix_upgrade.attributes, function() {
+      itemInfo.append("<p>+" +  $(this)[0].modifier + " " + $(this)[0].attribute + "</p>");
+    })
+  }
+  itemInfo.append("<p>" + item.type + "</p>");
+  itemInfo.append("<p>" + item.rarity + "</p>");
+  itemInfo.append("<p>" + item.level + "</p>");
+  if(item.details.type) {
+    itemInfo.append("<p>" + item.details.type + "</p>");
+  }
+  if(item.type == "Weapon") {
+    itemInfo.append("<p>" + item.details.min_power + " - " + item.details.max_power + "</p>");
+  }
+  if(characterItem.upgrades) {
+    console.log(characterItem.upgrades.length + " upgrades!");
+    $.each(characterItem.upgrades, function() {
+      console.log(characterItem.upgrades.length + " upgrades!");
+      for(var i = 0; i < itemList.length; i++) {
+        if(itemList[i].id == $(this)[0]) {
+          upgrade = itemList[i];
+          itemInfo.append(itemIcons[i]);
+          itemInfo.append("<p>" + upgrade.name + "</p>");
+        }
+      }
+    })
+  }
+}

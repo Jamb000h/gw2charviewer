@@ -25,7 +25,21 @@
   font-size: 0.5em;
 }
 
+#iteminfo * {
+  float: left;
+}
+
 .character {
   cursor: pointer;
   color: lightblue;
+}
+
+#wrapper {
+  width: 50%;
+  margin: 0 auto 0 auto;
+}
+
+.upgrade {
+  width: 32px;
+  height: 32px;
 }
