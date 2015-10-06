@@ -1,3 +1,11 @@
+/*
+ * Author: Jonne Kanerva
+ * Date: 6.10.2015
+ * Currently on to do-list:
+ * - Show all relevant item data - INCLUDING UPGRADES AND INFUSIONS
+ *
+*/
+
 var target = $("#wrapper");
 var itemInfo = $("#itemInfo");
 
@@ -11,6 +19,7 @@ function printCharacters() {
 
 function printCharacter(id) {
   character = account.characters[id];
+  console.log(character);
   target.append("<p>" + character.name + "</p>");
   target.append("<p>" + character.level + "</p>");
   target.append("<p>" + character.race + "</p>");
@@ -19,7 +28,7 @@ function printCharacter(id) {
 }
 
 function printItems(id) {
-  $.each(character.equipment, function() {
+  $.each(character.equipment, function(index, value) {
     var item;
     var itemIndex;
     for(var i = 0; i < itemList.length; i++) {
@@ -28,13 +37,15 @@ function printItems(id) {
         item = itemList[i];
       }
     }
-    target.append("<img data-index=\"" + itemIndex + "\" class=\"item\" alt=\"" + item.name + "\" src=\"" + item.icon + "\"/>");
+    target.append("<img data-index=\"" + itemIndex + "\" data-character-item=\"" + index + "\" class=\"item\" alt=\"" + item.name + "\" src=\"" + item.icon + "\"/>");
   })
 }
 
-function showItemInfo(index) {
+function showItemInfo(itemIndex, characterItemIndex) {
   itemInfo.empty();
-  var item = itemList[index];
+  var item = itemList[itemIndex];
+  var characterItem = character.equipment[characterItemIndex];
+  itemInfo.append("<img src=\"" + item.icon + "\" />");
   itemInfo.append("<p>" + item.name + "</p>");
   itemInfo.append("<p>" + item.type + "</p>");
   itemInfo.append("<p>" + item.rarity + "</p>");
@@ -44,6 +55,9 @@ function showItemInfo(index) {
   }
   if(item.type == "Weapon") {
     itemInfo.append("<p>" + item.details.min_power + " - " + item.details.max_power + "</p>");
+  }
+  if(characterItem.upgrades) {
+    console.log(characterItem.upgrades.length + " upgrades!");
   }
 }
 
@@ -55,6 +69,6 @@ $(target).on("click", ".character", function() {
   printCharacter(id);
 });
 
-$(target).on("mouseover", ".item", function() {
-  showItemInfo($(this).data("index"));
+$(target).on("mouseover", ".item", function(e) {
+  showItemInfo($(this).data("index"), $(this).data("character-item"));
 });
